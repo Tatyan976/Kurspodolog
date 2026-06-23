@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Стратегія запуску курсу Подології</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  :root {
+    --bg: #0a0c10; --surface: #13151c; --surface2: #1a1d26;
+    --border: #252836; --accent: #7c5cbf; --accent2: #c084fc;
+    --gold: #f59e0b; --teal: #14b8a6; --text: #e8eaf0; --muted: #6b7280;
+    --green: #22c55e; --red: #f87171;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Manrope',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  header {
+    padding: 40px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .badge {
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(124,92,191,.12); border:1px solid rgba(124,92,191,.3);
+    color:var(--accent2); padding:6px 16px; border-radius:20px;
+    font-size:12px; font-weight:700; letter-spacing:.06em; margin-bottom:18px;
+  }
+  header h1 { font-size:32px; font-weight:800; margin-bottom:10px; }
+  header p { font-size:15px; color:var(--muted); max-width:500px; margin:0 auto; line-height:1.7; }
+
+  .tabs-wrap {
+    display:flex; gap:4px; padding:20px 40px 0;
+    border-bottom:1px solid var(--border);
+    overflow-x:auto; scrollbar-width:none;
+  }
+  .tabs-wrap::-webkit-scrollbar { display:none; }
+  .tab {
+    padding:10px 18px; border-radius:8px 8px 0 0;
+    font-size:13px; font-weight:600; cursor:pointer;
+    border:none; background:transparent; color:var(--muted);
+    transition:all .2s; white-space:nowrap;
+    border-bottom:2px solid transparent;
+    font-family:'Manrope',sans-serif;
+  }
+  .tab:hover { color:var(--text); background:var(--surface); }
+  .tab.active { color:var(--accent2); border-bottom-color:var(--accent2); background:var(--surface); }
+
+  main { padding:32px 40px; max-width:960px; margin:0 auto; }
+  .section { display:none; }
+  .section.active { display:block; }
+
+  /* TIMELINE */
+  .phase {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; margin-bottom:16px; overflow:hidden;
+    transition:border-color .2s;
+  }
+  .phase:hover { border-color:rgba(124,92,191,.35); }
+  .phase-header {
+    padding:20px 24px; display:flex; align-items:center; gap:16px;
+    cursor:pointer; user-select:none;
+  }
+  .phase-num {
+    width:44px; height:44px; border-radius:12px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; font-weight:800;
+  }
+  .phase-info { flex:1; }
+  .phase-info h3 { font-size:15px; font-weight:700; }
+  .phase-info p { font-size:12px; color:var(--muted); margin-top:3px; }
+  .phase-days {
+    background:rgba(245,158,11,.12); border:1px solid rgba(245,158,11,.25);
+    color:var(--gold); padding:4px 12px; border-radius:12px;
+    font-size:12px; font-weight:700; flex-shrink:0;
+  }
+  .toggle { width:26px; height:26px; background:var(--surface2); border-radius:6px;
+    display:flex; align-items:center; justify-content:center; font-size:12px;
+    transition:transform .2s; flex-shrink:0; }
+  .toggle.open { transform:rotate(180deg); }
+  .phase-body { max-height:0; overflow:hidden; transition:max-height .35s ease, padding .35s; }
+  .phase-body.open { max-height:2000px; padding:0 24px 24px; }
+  .divider { height:1px; background:var(--border); margin-bottom:20px; }
+
+  /* TASKS */
+  .task-group { margin-bottom:20px; }
+  .task-group-label {
+    font-size:11px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:10px;
+  }
+  .task {
+    display:flex; align-items:flex-start; gap:12px;
+    background:var(--surface2); border:1px solid var(--border);
+    border-radius:10px; padding:12px 14px; margin-bottom:8px;
+  }
+  .task-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+  .task-content { flex:1; }
+  .task-title { font-size:13px; font-weight:600; margin-bottom:4px; }
+  .task-desc { font-size:12px; color:var(--muted); line-height:1.5; }
+  .task-meta { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .tag {
+    font-size:10px; font-weight:600; padding:2px 8px; border-radius:8px;
+    background:rgba(255,255,255,.05); color:var(--muted); border:1px solid var(--border);
+  }
+  .tag.ig { background:rgba(236,72,153,.1); color:#f472b6; border-color:rgba(236,72,153,.2); }
+  .tag.tg { background:rgba(59,130,246,.1); color:#60a5fa; border-color:rgba(59,130,246,.2); }
+  .tag.ai { background:rgba(124,92,191,.1); color:var(--accent2); border-color:rgba(124,92,191,.2); }
+  .tag.money { background:rgba(34,197,94,.1); color:var(--green); border-color:rgba(34,197,94,.2); }
+
+  /* METRICS */
+  .metrics-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:24px; }
+  .metric {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:16px; text-align:center;
+  }
+  .metric-num { font-size:26px; font-weight:800; }
+  .metric-label { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  /* CONTENT CARD */
+  .content-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:14px; padding:20px; margin-bottom:14px;
+  }
+  .content-card h4 { font-size:14px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .content-card p { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+  .content-example {
+    background:var(--bg); border:1px solid var(--border); border-radius:10px;
+    padding:14px; font-size:12.5px; line-height:1.8; color:var(--text);
+    white-space:pre-wrap;
+  }
+  .copy-btn {
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(124,92,191,.12); border:1px solid rgba(124,92,191,.3);
+    color:var(--accent2); padding:7px 14px; border-radius:8px;
+    font-size:12px; font-weight:600; cursor:pointer; transition:all .2s;
+    margin-top:10px; font-family:'Manrope',sans-serif;
+  }
+  .copy-btn:hover { background:rgba(124,92,191,.25); }
+  .copy-btn.copied { background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.3); color:var(--green); }
+
+  /* PRICE TABLE */
+  .price-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+  @media(max-width:600px) { .price-grid { grid-template-columns:1fr; } }
+  .price-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:24px;
+  }
+  .price-card.featured { border-color:rgba(124,92,191,.5); }
+  .price-badge {
+    font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent2); margin-bottom:12px;
+  }
+  .price-name { font-size:18px; font-weight:800; margin-bottom:6px; }
+  .price-amount { font-size:32px; font-weight:800; color:var(--accent2); margin-bottom:4px; }
+  .price-old { font-size:14px; color:var(--muted); text-decoration:line-through; margin-bottom:16px; }
+  .price-features { list-style:none; }
+  .price-features li { font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); color:var(--text); display:flex; gap:8px; }
+  .price-features li:last-child { border-bottom:none; }
+  .price-features li::before { content:'✓'; color:var(--green); font-weight:700; flex-shrink:0; }
+
+  .goal-box {
+    background:rgba(34,197,94,.06); border:1px solid rgba(34,197,94,.2);
+    border-radius:12px; padding:16px 20px; margin-bottom:16px;
+  }
+  .goal-box h4 { font-size:13px; font-weight:700; color:var(--green); margin-bottom:8px; }
+  .goal-box p { font-size:13px; color:var(--text); line-height:1.6; }
+
+  .warn-box {
+    background:rgba(245,158,11,.06); border:1px solid rgba(245,158,11,.2);
+    border-radius:12px; padding:16px 20px; margin-bottom:16px;
+  }
+  .warn-box h4 { font-size:13px; font-weight:700; color:var(--gold); margin-bottom:8px; }
+  .warn-box p { font-size:13px; color:var(--text); line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">🚀 Стратегія запуску · Instagram / TikTok</div>
+  <h1>Курс Подології — План на 30 днів</h1>
+  <p>Від нуля до першої оплаченої групи. Ціна: 1500-3000 грн. Мета: 10 учнів на старті</p>
+</header>
+
+<div class="tabs-wrap">
+  <button class="tab active" onclick="switchTab('plan')">📅 План 30 днів</button>
+  <button class="tab" onclick="switchTab('content')">📱 Контент</button>
+  <button class="tab" onclick="switchTab('price')">💰 Тарифи</button>
+  <button class="tab" onclick="switchTab('numbers')">📊 Цифри</button>
+</div>
+
+<main>
+
+<!-- ПЛАН -->
+<div class="section active" id="section-plan">
+
+  <!-- ФАЗА 1 -->
+  <div class="phase">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num" style="background:rgba(124,92,191,.15);color:#c084fc">🔥</div>
+      <div class="phase-info">
+        <h3>Фаза 1 — Прогрів аудиторії</h3>
+        <p>Починаєш говорити про подологію — без продажу</p>
+      </div>
+      <div class="phase-days">Дні 1-10</div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="phase-body open">
+      <div class="divider"></div>
+
+      <div class="task-group">
+        <div class="task-group-label">Instagram / TikTok — що публікувати</div>
+
+        <div class="task">
+          <div class="task-icon">📸</div>
+          <div class="task-content">
+            <div class="task-title">Пост 1 — Особиста історія</div>
+            <div class="task-desc">"Чому я вирішила вивчити подологію?" — твоя особиста мотивація. Люди купують у людей.</div>
+            <div class="task-meta"><span class="tag ig">Instagram</span><span class="tag">день 1</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">🎬</div>
+          <div class="task-content">
+            <div class="task-title">Reels 1 — "3 помилки майстра педикюру"</div>
+            <div class="task-desc">Що роблять майстри коли бачать мозоль / врослий ніготь і чому це небезпечно. Чіпляє майстрів.</div>
+            <div class="task-meta"><span class="tag ig">Reels</span><span class="tag">день 2-3</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">📸</div>
+          <div class="task-content">
+            <div class="task-title">Пост 2 — Освітній: "Що таке подологія"</div>
+            <div class="task-desc">Поясни просто чим подолог відрізняється від майстра педикюру. Карусель з 5-7 слайдів.</div>
+            <div class="task-meta"><span class="tag ig">Карусель</span><span class="tag">день 4-5</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">🎬</div>
+          <div class="task-content">
+            <div class="task-title">Reels 2 — До/після обробки стопи</div>
+            <div class="task-desc">Реальний результат роботи. Найкращий контент для охоплення. Без обличчя клієнта якщо немає дозволу.</div>
+            <div class="task-meta"><span class="tag ig">Reels</span><span class="tag">день 6-7</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">📊</div>
+          <div class="task-content">
+            <div class="task-title">Сторіз — Опитування щодня</div>
+            <div class="task-desc">"Ти стикалась з мозолями у клієнтів?" / "Знаєш що робити з врослим нігтем?" — збираєш аудиторію і розумієш болі</div>
+            <div class="task-meta"><span class="tag ig">Сторіз</span><span class="tag">щодня</span><span class="tag ai">AI</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="warn-box">
+        <h4>⚡ Головне правило фази 1</h4>
+        <p>НЕ продаєш курс. Просто даєш цінність і збираєш реакції. Хто активно реагує — той твій потенційний учень.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ФАЗА 2 -->
+  <div class="phase">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num" style="background:rgba(245,158,11,.15);color:#f59e0b">📣</div>
+      <div class="phase-info">
+        <h3>Фаза 2 — Анонс і передпродаж</h3>
+        <p>Оголошуєш курс і збираєш заявки за спеціальною ціною</p>
+      </div>
+      <div class="phase-days">Дні 11-20</div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="divider"></div>
+
+      <div class="task-group">
+        <div class="task-group-label">Ключові дії</div>
+
+        <div class="task">
+          <div class="task-icon">🎯</div>
+          <div class="task-content">
+            <div class="task-title">Пост-анонс курсу</div>
+            <div class="task-desc">Великий пост з описом курсу, для кого, що отримають, ціна РАННЬОГО птаха (знижка 30%). Дедлайн — 5 днів.</div>
+            <div class="task-meta"><span class="tag ig">Instagram</span><span class="tag money">Продаж</span><span class="tag">день 11</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">💬</div>
+          <div class="task-content">
+            <div class="task-title">Особисті повідомлення активним підписникам</div>
+            <div class="task-desc">Хто відповідав на опитування в сторіз — напиши особисто. "Бачила ти цікавилась темою мозолів — є для тебе пропозиція"</div>
+            <div class="task-meta"><span class="tag">Direct</span><span class="tag money">Продаж</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">🎬</div>
+          <div class="task-content">
+            <div class="task-title">Reels — "Скільки заробляє подолог"</div>
+            <div class="task-desc">Реальні цифри: скільки коштує процедура, скільки клієнтів в день, який середній дохід. Мотивує купити курс.</div>
+            <div class="task-meta"><span class="tag ig">Reels</span><span class="tag">день 13-14</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">⏰</div>
+          <div class="task-content">
+            <div class="task-title">Сторіз — зворотній відлік</div>
+            <div class="task-desc">Щодня показуєш скільки місць залишилось і скільки годин до кінця ранньої ціни. Дефіцит і терміновість.</div>
+            <div class="task-meta"><span class="tag ig">Сторіз</span><span class="tag">щодня</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">🎙️</div>
+          <div class="task-content">
+            <div class="task-title">Live або Reels — відповіді на питання</div>
+            <div class="task-desc">"Відповідаю на всі питання про курс" — знімаєш заперечення і закриваєш тих хто сумнівається</div>
+            <div class="task-meta"><span class="tag ig">Live</span><span class="tag">день 17-18</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="goal-box">
+        <h4>🎯 Мета фази 2</h4>
+        <p>Зібрати 5-7 передоплат за ціною раннього птаха (1500 грн). Це вже 7500-10500 грн до старту курсу.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ФАЗА 3 -->
+  <div class="phase">
+    <div class="phase-header" onclick="togglePhase(this)">
+      <div class="phase-num" style="background:rgba(34,197,94,.15);color:#22c55e">✅</div>
+      <div class="phase-info">
+        <h3>Фаза 3 — Закриття продажів і старт</h3>
+        <p>Добираєш групу до 10-15 людей і стартуєш курс</p>
+      </div>
+      <div class="phase-days">Дні 21-30</div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="phase-body">
+      <div class="divider"></div>
+
+      <div class="task-group">
+        <div class="task-group-label">Дії</div>
+
+        <div class="task">
+          <div class="task-icon">💰</div>
+          <div class="task-content">
+            <div class="task-title">Повна ціна — останній шанс</div>
+            <div class="task-desc">Ціна підвищується до 2500-3000 грн. Пост "Залишилось 3 місця за повною ціною". Дедлайн — старт курсу.</div>
+            <div class="task-meta"><span class="tag money">Продаж</span><span class="tag">день 21</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">🎬</div>
+          <div class="task-content">
+            <div class="task-title">Reels — фрагмент уроку безкоштовно</div>
+            <div class="task-desc">Покажи 2-3 хвилини реального уроку. Люди бачать якість і хочуть більше. Найкращий спосіб зняти сумніви.</div>
+            <div class="task-meta"><span class="tag ig">Reels</span><span class="tag">день 23-24</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">📱</div>
+          <div class="task-content">
+            <div class="task-title">Створення Telegram-групи учнів</div>
+            <div class="task-desc">Всі хто купив — додаєш в закриту Telegram-групу. Там спілкування, домашні завдання, підтримка між заняттями.</div>
+            <div class="task-meta"><span class="tag tg">Telegram</span><span class="tag">день 28-29</span></div>
+          </div>
+        </div>
+
+        <div class="task">
+          <div class="task-icon">🎓</div>
+          <div class="task-content">
+            <div class="task-title">Старт першого модуля</div>
+            <div class="task-desc">День 30 — відкриваєш доступ до Модуля 1. Перше живе заняття. Збираєш відгуки після першого тижня.</div>
+            <div class="task-meta"><span class="tag money">Старт</span><span class="tag">день 30</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="goal-box">
+        <h4>🎯 Мета фази 3</h4>
+        <p>10-15 оплачених учнів. При 10 учнях по 2000 грн = 20 000 грн за перший запуск. І це тільки початок.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- КОНТЕНТ -->
+<div class="section" id="section-content">
+
+  <div class="content-card">
+    <h4>🎬 Reels 1 — Чіпляючий старт</h4>
+    <p>Перший відео для прогріву. Говориш в камеру, можна з робочого місця.</p>
+    <div class="content-example" id="c1">Якщо до тебе приходить клієнтка з мозолями — і ти не знаєш що робити...
+
+Ти не одна. 9 з 10 майстрів педикюру кажуть "я не беруся за проблемні стопи".
+
+І це правильно — без знань краще не чіпати.
+
+Але є хороша новина: подологія — це навичка яку можна вивчити за 3 місяці.
+
+І тоді ці самі клієнти будуть платити тобі в 2 рази більше.
+
+Хочеш дізнатись як? Підписуйся — розповідаю все по кроках 👇</div>
+    <button class="copy-btn" onclick="copyC('c1',this)">📋 Скопіювати текст</button>
+  </div>
+
+  <div class="content-card">
+    <h4>📸 Пост-карусель — "Що таке подологія"</h4>
+    <p>Освітній пост. Кожен абзац = окремий слайд карусель.</p>
+    <div class="content-example" id="c2">Слайд 1 (обкладинка):
+"Подологія — це не просто педикюр. Ось у чому різниця 👇"
+
+Слайд 2:
+Педикюр = естетика
+Подологія = здоров'я стопи
+
+Слайд 3:
+Подолог працює з:
+• Мозолями і натоптишами
+• Врослими нігтями
+• Грибком нігтів
+• Деформаціями пальців
+
+Слайд 4:
+До подолога приходять коли боляче ходити.
+До майстра педикюру — коли хочуть красиво.
+
+Слайд 5:
+Майстер з подологічними знаннями = рідкість.
+Черга на 2-3 тижні вперед — норма.
+
+Слайд 6 (CTA):
+Хочеш навчитись?
+Напиши мені в директ слово "ПОДОЛОГІЯ" і я розповім деталі 💜</div>
+    <button class="copy-btn" onclick="copyC('c2',this)">📋 Скопіювати текст</button>
+  </div>
+
+  <div class="content-card">
+    <h4>🎯 Пост-анонс курсу</h4>
+    <p>Головний продажний пост. Публікуєш на день 11.</p>
+    <div class="content-example" id="c3">Ти майстер педикюру і регулярно відмовляєш клієнтам з проблемними стопами?
+
+Я так само. До тих пір поки не вивчила подологію.
+
+Тепер я відкриваю курс "Основи Подології для Майстрів" і беру першу групу.
+
+ЩО ВСЕРЕДИНІ:
+✓ 8 модулів по реальних проблемах стоп
+✓ 42 відео-уроки (дивишся коли зручно)
+✓ 6 живих занять з розбором твоїх кейсів
+✓ Карти клієнтів, протоколи, чек-листи
+✓ Закрита Telegram-група підтримки
+✓ Сертифікат після іспиту
+
+ДЛЯ КОГО:
+Майстри манікюру і педикюру які хочуть додати подологічні послуги і підняти свій дохід на 30-50%
+
+ТРИВАЛІСТЬ: 3 місяці, змішаний формат
+
+ЦІНА ДО [ДАТА]:
+🔥 1500 грн (замість 2500 грн)
+Залишилось 7 місць за ранньою ціною
+
+Напиши мені в директ слово "ХОЧУ" і я надішлю всі деталі 💜</div>
+    <button class="copy-btn" onclick="copyC('c3',this)">📋 Скопіювати текст</button>
+  </div>
+
+  <div class="content-card">
+    <h4>💬 Повідомлення в Direct</h4>
+    <p>Надсилаєш особисто тим хто реагував на твої сторіз і пости.</p>
+    <div class="content-example" id="c4">Привіт [ім'я] 👋
+
+Бачила що ти активно реагуєш на мій контент про подологію — дякую!
+
+Я запускаю перший курс "Основи Подології для Майстрів" і хотіла запропонувати тобі місце за спеціальною ціною раннього птаха.
+
+Курс на 3 місяці, змішаний формат — відео уроки + живі заняття.
+
+Якщо цікаво — напиши і я розповім всі деталі 💜</div>
+    <button class="copy-btn" onclick="copyC('c4',this)">📋 Скопіювати текст</button>
+  </div>
+
+</div>
+
+<!-- ТАРИФИ -->
+<div class="section" id="section-price">
+
+  <div class="price-grid">
+    <div class="price-card">
+      <div class="price-badge">БАЗОВИЙ</div>
+      <div class="price-name">Самостійний</div>
+      <div class="price-amount">1500 грн</div>
+      <div class="price-old">2000 грн — після старту</div>
+      <ul class="price-features">
+        <li>42 відео-уроки</li>
+        <li>PDF матеріали і чек-листи</li>
+        <li>Тести після кожного модуля</li>
+        <li>Сертифікат</li>
+        <li>Доступ 6 місяців</li>
+      </ul>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge">⭐ НАЙПОПУЛЯРНІШИЙ</div>
+      <div class="price-name">З підтримкою</div>
+      <div class="price-amount">2500 грн</div>
+      <div class="price-old">3000 грн — після старту</div>
+      <ul class="price-features">
+        <li>Все з базового тарифу</li>
+        <li>6 живих занять з куратором</li>
+        <li>Закрита Telegram-група</li>
+        <li>Розбір твоїх кейсів на живих</li>
+        <li>Перевірка домашніх завдань</li>
+        <li>Доступ 12 місяців</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="goal-box">
+    <h4>💰 Математика першого запуску</h4>
+    <p>
+      5 учнів × 1500 грн = 7 500 грн<br>
+      5 учнів × 2500 грн = 12 500 грн<br>
+      <strong>Разом 10 учнів = 20 000 грн</strong><br><br>
+      І це ДО того як ти записала хоч один урок. Тільки на передпродажі.
+    </p>
+  </div>
+
+  <div class="warn-box">
+    <h4>⚡ Стратегія ціноутворення</h4>
+    <p>Перший запуск — завжди найдешевший. Пояснюй це чесно: "Перша група — за мінімальною ціною, бо ми будемо вдосконалювати програму разом". Другий запуск — ціна підвищується на 30-50%.</p>
+  </div>
+
+</div>
+
+<!-- ЦИФРИ -->
+<div class="section" id="section-numbers">
+
+  <div class="metrics-grid">
+    <div class="metric">
+      <div class="metric-num" style="color:#c084fc">10</div>
+      <div class="metric-label">Учнів мета першого запуску</div>
+    </div>
+    <div class="metric">
+      <div class="metric-num" style="color:#22c55e">20 000</div>
+      <div class="metric-label">Грн при 10 учнях</div>
+    </div>
+    <div class="metric">
+      <div class="metric-num" style="color:#f59e0b">30</div>
+      <div class="metric-label">Днів до першої оплати</div>
+    </div>
+    <div class="metric">
+      <div class="metric-num" style="color:#14b8a6">3</div>
+      <div class="metric-label">Пости на тиждень мінімум</div>
+    </div>
+  </div>
+
+  <div class="content-card">
+    <h4>📊 Воронка продажів</h4>
+    <p>Як виглядає шлях від підписника до учня:</p>
+    <div class="content-example">100 переглядів Reels
+  ↓ 30-40% підписуються
+30-40 нових підписників
+
+  ↓ 20-30% читають пост-анонс
+6-12 людей зацікавились
+
+  ↓ 50-60% пишуть в Direct
+3-7 діалогів
+
+  ↓ 40-50% купують
+1-3 продажі з одного Reels
+
+Потрібно 5-7 активних Reels щоб зібрати групу з 10 людей</div>
+  </div>
+
+  <div class="content-card">
+    <h4>⏰ Скільки часу потрібно</h4>
+    <p>Реальний розклад на місяць запуску:</p>
+    <div class="content-example">Щодня: 20-30 хв на сторіз (опитування, відповіді)
+3 рази в тиждень: пост або Reels (1-2 год на створення)
+1 раз в тиждень: відповіді в Direct (30-40 хв)
+
+Разом: ~6-8 годин на тиждень
+
+Це реально навіть якщо ти паралельно приймаєш клієнтів</div>
+  </div>
+
+</div>
+
+</main>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+function togglePhase(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.toggle');
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+function copyC(id, btn) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
+    btn.textContent = '✅ Скопійовано!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Скопіювати текст'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+</script>
+</body>
+</html>
