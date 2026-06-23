@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Основи Подології — Курс для Майстрів</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #13151c;
+    --surface2: #1a1d26;
+    --border: #252836;
+    --accent: #7c5cbf;
+    --accent2: #c084fc;
+    --gold: #f59e0b;
+    --teal: #14b8a6;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --green: #22c55e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Manrope', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* HERO */
+  .hero {
+    padding: 60px 40px 48px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(124,92,191,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(124,92,191,0.12);
+    border: 1px solid rgba(124,92,191,0.3);
+    color: var(--accent2);
+    padding: 6px 16px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; letter-spacing: .06em;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 38px; font-weight: 800; line-height: 1.2;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p { font-size: 16px; color: var(--muted); max-width: 540px; margin: 0 auto 32px; line-height: 1.7; }
+
+  .stats-row {
+    display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-size: 28px; font-weight: 800; color: var(--accent2); }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* TABS */
+  .tabs-wrap {
+    display: flex; gap: 4px; padding: 20px 40px 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .tabs-wrap::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 10px 18px; border-radius: 8px 8px 0 0;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; background: transparent; color: var(--muted);
+    transition: all .2s; white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    font-family: 'Manrope', sans-serif;
+  }
+  .tab:hover { color: var(--text); background: var(--surface); }
+  .tab.active { color: var(--accent2); border-bottom-color: var(--accent2); background: var(--surface); }
+
+  main { padding: 32px 40px; max-width: 980px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* MODULE CARD */
+  .module {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color .2s;
+  }
+  .module:hover { border-color: rgba(124,92,191,0.35); }
+  .module-header {
+    padding: 20px 24px;
+    display: flex; align-items: center; gap: 16px;
+    cursor: pointer; user-select: none;
+  }
+  .module-num {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; flex-shrink: 0;
+  }
+  .module-info { flex: 1; }
+  .module-info h3 { font-size: 15px; font-weight: 700; }
+  .module-info p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .module-meta { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  .pill {
+    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+  }
+  .pill.video { background: rgba(20,184,166,.12); color: var(--teal); border: 1px solid rgba(20,184,166,.25); }
+  .pill.live { background: rgba(245,158,11,.12); color: var(--gold); border: 1px solid rgba(245,158,11,.25); }
+  .pill.pdf { background: rgba(124,92,191,.12); color: var(--accent2); border: 1px solid rgba(124,92,191,.25); }
+  .pill.test { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
+  .toggle { width: 26px; height: 26px; background: var(--surface2); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; transition: transform .2s; flex-shrink: 0; }
+  .toggle.open { transform: rotate(180deg); }
+
+  .module-body { max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .35s; }
+  .module-body.open { max-height: 1200px; padding: 0 24px 24px; }
+  .divider { height: 1px; background: var(--border); margin-bottom: 20px; }
+
+  .lessons-grid { display: grid; gap: 8px; }
+  .lesson {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--surface2); border-radius: 10px; padding: 12px 14px;
+    border: 1px solid var(--border);
+  }
+  .lesson-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .lesson-content { flex: 1; }
+  .lesson-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .lesson-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .lesson-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .lesson-tag {
+    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 8px;
+    background: rgba(255,255,255,.05); color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .lesson-dur { font-size: 11px; color: var(--muted); flex-shrink: 0; margin-top: 2px; }
+
+  /* HW BOX */
+  .hw-box {
+    margin-top: 16px;
+    background: rgba(245,158,11,.06);
+    border: 1px solid rgba(245,158,11,.2);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .hw-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; }
+  .hw-box ul { list-style: none; }
+  .hw-box ul li { font-size: 12.5px; color: var(--text); padding: 4px 0 4px 16px; position: relative; line-height: 1.5; }
+  .hw-box ul li::before { content: '→'; position: absolute; left: 0; color: var(--gold); font-size: 10px; top: 5px; }
+
+  /* AI BOX */
+  .ai-box {
+    margin-top: 12px;
+    background: rgba(124,92,191,.06);
+    border: 1px solid rgba(124,92,191,.2);
+    border-radius: 10px; padding: 14px 16px;
+  }
+  .ai-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--accent2); text-transform: uppercase; margin-bottom: 8px; }
+  .ai-box p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .ai-prompt {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+    color: var(--text); line-height: 1.6;
+  }
+
+  /* ПРОМПТ РОЗДІЛ */
+  .prompt-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; margin-bottom: 16px;
+  }
+  .prompt-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .prompt-card .desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+  .prompt-box {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px; font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text); line-height: 1.8;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .copy-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(124,92,191,.12); border: 1px solid rgba(124,92,191,.3);
+    color: var(--accent2); padding: 7px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all .2s; margin-top: 12px;
+    font-family: 'Manrope', sans-serif;
+  }
+  .copy-btn:hover { background: rgba(124,92,191,.25); }
+  .copy-btn.copied { background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.3); color: var(--green); }
+
+  /* PLAN TABLE */
+  .plan-table { width: 100%; border-collapse: collapse; }
+  .plan-table th {
+    text-align: left; padding: 10px 14px; font-size: 11px;
+    font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+  }
+  .plan-table td {
+    padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .plan-table tr:last-child td { border-bottom: none; }
+  .plan-table tr:hover td { background: var(--surface2); }
+  .week-num { font-weight: 700; color: var(--accent2); }
+  .format-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 8px; font-size: 11px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge">🦶 Enterprise AI Mapper · Подологія</div>
+  <h1>Основи Подології<br>для Майстрів Манікюру</h1>
+  <p>Змішаний курс для майстрів манікюру і педикюру які хочуть розширити компетенції і додати подологічні послуги до свого прайсу</p>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">8</div><div class="stat-label">Модулів</div></div>
+    <div class="stat"><div class="stat-num">42</div><div class="stat-label">Уроки</div></div>
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">Живих занять</div></div>
+    <div class="stat"><div class="stat-num">3 міс</div><div class="stat-label">Тривалість</div></div>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <button class="tab active" onclick="switchTab('program')">📚 Програма</button>
+  <button class="tab" onclick="switchTab('schedule')">📅 Розклад</button>
+  <button class="tab" onclick="switchTab('prompts')">🤖 AI-Промпти</button>
+  <button class="tab" onclick="switchTab('sales')">💰 Продаж курсу</button>
+</div>
+
+<main>
+
+<!-- ПРОГРАМА -->
+<div class="section active" id="section-program">
+
+  <!-- МОДУЛЬ 1 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(124,92,191,.15);color:#c084fc">01</div>
+      <div class="module-info">
+        <h3>Анатомія та фізіологія стопи</h3>
+        <p>База без якої неможливо розуміти проблеми клієнта</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill pdf">📄 PDF</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Кістки, суглоби і зв'язки стопи</div>
+            <div class="lesson-desc">26 кісток, 33 суглоби — що де знаходиться і чому це важливо для роботи майстра</div>
+            <div class="lesson-tags"><span class="lesson-tag">анатомія</span><span class="lesson-tag">теорія</span></div>
+          </div>
+          <div class="lesson-dur">25 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">М'язи і сухожилля — що рухає стопою</div>
+            <div class="lesson-desc">Як деформації пальців пов'язані з м'язовим дисбалансом. Чому клієнт скаржиться на біль</div>
+            <div class="lesson-tags"><span class="lesson-tag">фізіологія</span></div>
+          </div>
+          <div class="lesson-dur">20 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Кровообіг і іннервація стопи</div>
+            <div class="lesson-desc">Чому у діабетиків і людей з варикозом особливий протокол роботи. Зони ризику</div>
+            <div class="lesson-tags"><span class="lesson-tag">безпека</span><span class="lesson-tag">медицина</span></div>
+          </div>
+          <div class="lesson-dur">22 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📄</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Атлас анатомії стопи</div>
+            <div class="lesson-desc">PDF з ілюстраціями для самостійного вивчення і роботи з клієнтами</div>
+            <div class="lesson-tags"><span class="lesson-tag">матеріали</span></div>
+          </div>
+          <div class="lesson-dur">PDF</div>
+        </div>
+      </div>
+      <div class="hw-box">
+        <div class="hw-label">🏠 Домашнє завдання</div>
+        <ul>
+          <li>Намалювати схему кісток стопи від пам'яті і підписати назви</li>
+          <li>Оглянути стопи 3 знайомих і описати що бачиш — зони мозолів, положення пальців</li>
+          <li>Пройти тест по анатомії в платформі (мін. 80% правильних)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДУЛЬ 2 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(20,184,166,.15);color:#14b8a6">02</div>
+      <div class="module-info">
+        <h3>Патології нігтів — діагностика і протоколи</h3>
+        <p>Оніхомікоз, вросший ніготь, деформації — що робити і що НЕ робити</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill live">🔴 Живе</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Оніхомікоз — грибок нігтя</div>
+            <div class="lesson-desc">Як розпізнати, стадії розвитку, коли відправляти до лікаря, безпечний протокол обробки</div>
+            <div class="lesson-tags"><span class="lesson-tag">грибок</span><span class="lesson-tag">протокол</span><span class="lesson-tag">важливо</span></div>
+          </div>
+          <div class="lesson-dur">30 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Врослий ніготь — ступені і тактика</div>
+            <div class="lesson-desc">1, 2, 3 ступінь — що може зробити майстер, а що тільки лікар. Техніка корекції кліпсою</div>
+            <div class="lesson-tags"><span class="lesson-tag">корекція</span><span class="lesson-tag">кліпса</span></div>
+          </div>
+          <div class="lesson-dur">35 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Деформації нігтьової пластини</div>
+            <div class="lesson-desc">Оніхогрифоз, оніхоліз, субунгвальна гіперкератоз — розпізнавання і тактика роботи</div>
+            <div class="lesson-tags"><span class="lesson-tag">деформації</span></div>
+          </div>
+          <div class="lesson-dur">28 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">🔴</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Живе заняття: Розбір кейсів</div>
+            <div class="lesson-desc">Учасники надсилають фото клієнтів, розбираємо діагноз і тактику разом в групі</div>
+            <div class="lesson-tags"><span class="lesson-tag">практика</span><span class="lesson-tag">кейси</span></div>
+          </div>
+          <div class="lesson-dur">90 хв</div>
+        </div>
+      </div>
+      <div class="hw-box">
+        <div class="hw-label">🏠 Домашнє завдання</div>
+        <ul>
+          <li>Сфотографувати 5 різних станів нігтів (своїх або клієнтів) і поставити попередній діагноз</li>
+          <li>Скласти протокол роботи з клієнтом з оніхомікозом (дезінфекція, інструменти, рекомендації)</li>
+          <li>Написати скрипт як повідомити клієнту що потрібно до лікаря</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДУЛЬ 3 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(245,158,11,.15);color:#f59e0b">03</div>
+      <div class="module-info">
+        <h3>Гіперкератоз і мозолі — типи і обробка</h3>
+        <p>Від сухої мозолі до стержневої — правильна класифікація і техніка видалення</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill pdf">📄 PDF</span>
+        <span class="pill test">✅ Тест</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Класифікація мозолів і натоптишів</div>
+            <div class="lesson-desc">М'яка, тверда, стержнева, судинна, фіброзна — як розрізнити і чому це критично важливо</div>
+            <div class="lesson-tags"><span class="lesson-tag">класифікація</span><span class="lesson-tag">діагностика</span></div>
+          </div>
+          <div class="lesson-dur">25 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Техніка апаратної обробки гіперкератозу</div>
+            <div class="lesson-desc">Вибір фрез, швидкість, кути, тиск. Як не травмувати і не залишити рецидив</div>
+            <div class="lesson-tags"><span class="lesson-tag">техніка</span><span class="lesson-tag">апарат</span></div>
+          </div>
+          <div class="lesson-dur">40 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Видалення стержневої мозолі</div>
+            <div class="lesson-desc">Покроковий протокол, вибір інструменту, глибина, фінішна обробка, домашній догляд</div>
+            <div class="lesson-tags"><span class="lesson-tag">стержнева</span><span class="lesson-tag">протокол</span></div>
+          </div>
+          <div class="lesson-dur">35 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">✅</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Тест: Діагностика по фото</div>
+            <div class="lesson-desc">20 фото реальних стоп — визначити тип мозолі і обрати правильну тактику</div>
+            <div class="lesson-tags"><span class="lesson-tag">перевірка знань</span></div>
+          </div>
+          <div class="lesson-dur">20 хв</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДУЛЬ 4 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(239,68,68,.15);color:#f87171">04</div>
+      <div class="module-info">
+        <h3>Особливі групи клієнтів</h3>
+        <p>Діабет, варикоз, вагітність, літні — особливості протоколу і зони ризику</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill live">🔴 Живе</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Клієнт з цукровим діабетом</div>
+            <div class="lesson-desc">Діабетична стопа — що категорично заборонено, протокол роботи, протипоказання, документування</div>
+            <div class="lesson-tags"><span class="lesson-tag">діабет</span><span class="lesson-tag">безпека</span><span class="lesson-tag">критично</span></div>
+          </div>
+          <div class="lesson-dur">35 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Варикоз і судинні патології</div>
+            <div class="lesson-desc">Стадії ХВН, що можна робити, тиск апарату, протипоказання, коли відмовити клієнту</div>
+            <div class="lesson-tags"><span class="lesson-tag">варикоз</span><span class="lesson-tag">судини</span></div>
+          </div>
+          <div class="lesson-dur">28 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Вагітні і літні клієнти</div>
+            <div class="lesson-desc">Набряки, зміни нігтів при вагітності. Крихкість тканин у літніх — адаптований протокол</div>
+            <div class="lesson-tags"><span class="lesson-tag">вагітність</span><span class="lesson-tag">геронтологія</span></div>
+          </div>
+          <div class="lesson-dur">22 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">🔴</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Живе заняття: Заповнення карти клієнта</div>
+            <div class="lesson-desc">Практика заповнення подологічної карти, анамнез, протипоказання, інформована згода</div>
+            <div class="lesson-tags"><span class="lesson-tag">документація</span><span class="lesson-tag">практика</span></div>
+          </div>
+          <div class="lesson-dur">90 хв</div>
+        </div>
+      </div>
+      <div class="hw-box">
+        <div class="hw-label">🏠 Домашнє завдання</div>
+        <ul>
+          <li>Скласти анкету-опитувальник для нового клієнта з подологічного прийому</li>
+          <li>Написати протокол дій якщо під час процедури клієнт повідомив що має діабет</li>
+          <li>Розробити список питань для первинної консультації</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДУЛЬ 5 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(59,130,246,.15);color:#60a5fa">05</div>
+      <div class="module-info">
+        <h3>Дезінфекція, стерилізація і охорона праці</h3>
+        <p>Стандарти санепідемрежиму — від вибору дезінфектанту до утилізації відходів</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill pdf">📄 PDF</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Рівні знезараження в подології</div>
+            <div class="lesson-desc">Дезінфекція, ПСО, стерилізація — в чому різниця і для яких інструментів що застосовувати</div>
+            <div class="lesson-tags"><span class="lesson-tag">стерилізація</span><span class="lesson-tag">стандарти</span></div>
+          </div>
+          <div class="lesson-dur">25 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Вибір дезінфектантів і ЗІЗ</div>
+            <div class="lesson-desc">Які засоби для чого, концентрації розчинів, час експозиції, захист майстра</div>
+            <div class="lesson-tags"><span class="lesson-tag">хімія</span><span class="lesson-tag">захист</span></div>
+          </div>
+          <div class="lesson-dur">20 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📄</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Чек-лист санепідемрежиму кабінету</div>
+            <div class="lesson-desc">Готовий PDF що роздруковується і вішається в кабінеті — щоденна і щотижнева рутина</div>
+            <div class="lesson-tags"><span class="lesson-tag">чек-лист</span><span class="lesson-tag">кабінет</span></div>
+          </div>
+          <div class="lesson-dur">PDF</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДУЛЬ 6 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(16,185,129,.15);color:#34d399">06</div>
+      <div class="module-info">
+        <h3>Засоби і косметика для стоп — вибір і рекомендації</h3>
+        <p>Кератолітики, зволожувачі, протигрибкові — як підібрати і продати клієнту</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill live">🔴 Живе</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Кератолітики — кислоти і ферменти</div>
+            <div class="lesson-desc">Сечовина 10/20/40%, саліцилова, молочна, фруктові кислоти — коли і що застосовувати</div>
+            <div class="lesson-tags"><span class="lesson-tag">кислоти</span><span class="lesson-tag">косметика</span></div>
+          </div>
+          <div class="lesson-dur">30 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Домашній догляд — що рекомендувати клієнту</div>
+            <div class="lesson-desc">Протокол між процедурами. Як скласти персональний план догляду і збільшити повторні продажі</div>
+            <div class="lesson-tags"><span class="lesson-tag">ритейл</span><span class="lesson-tag">продажі</span></div>
+          </div>
+          <div class="lesson-dur">25 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">🔴</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Живе заняття: Складаємо прайс подологічних послуг</div>
+            <div class="lesson-desc">Які послуги додати, як назвати, ціноутворення, пакети послуг. Практика на реальних прайсах учасників</div>
+            <div class="lesson-tags"><span class="lesson-tag">бізнес</span><span class="lesson-tag">прайс</span></div>
+          </div>
+          <div class="lesson-dur">90 хв</div>
+        </div>
+      </div>
+      <div class="hw-box">
+        <div class="hw-label">🏠 Домашнє завдання</div>
+        <ul>
+          <li>Скласти свій прайс подологічних послуг (мін. 5 позицій)</li>
+          <li>Підібрати 3 засоби домашнього догляду які будеш рекомендувати клієнтам</li>
+          <li>Написати скрипт рекомендації засобу клієнту після процедури</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДУЛЬ 7 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(236,72,153,.15);color:#f472b6">07</div>
+      <div class="module-info">
+        <h3>Практична подологія — від консультації до результату</h3>
+        <p>Повний алгоритм прийому: анамнез, діагностика, протокол, домашні рекомендації</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill live">🔴 Живе</span>
+        <span class="pill test">✅ Тест</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Алгоритм первинного прийому</div>
+            <div class="lesson-desc">Зустріч клієнта, анамнез, огляд стопи, постановка завдань, пояснення процедури, ціноутворення</div>
+            <div class="lesson-tags"><span class="lesson-tag">алгоритм</span><span class="lesson-tag">консультація</span></div>
+          </div>
+          <div class="lesson-dur">35 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Розбір реального прийому — демонстрація</div>
+            <div class="lesson-desc">Повна процедура від А до Я з коментарями — врослий ніготь + гіперкератоз + рекомендації</div>
+            <div class="lesson-tags"><span class="lesson-tag">демонстрація</span><span class="lesson-tag">відео</span></div>
+          </div>
+          <div class="lesson-dur">60 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">🔴</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Живе заняття: Перший самостійний прийом</div>
+            <div class="lesson-desc">Учасники проводять процедуру і отримують зворотній зв'язок від куратора в реальному часі</div>
+            <div class="lesson-tags"><span class="lesson-tag">практика</span><span class="lesson-tag">зворотній зв'язок</span></div>
+          </div>
+          <div class="lesson-dur">120 хв</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДУЛЬ 8 -->
+  <div class="module">
+    <div class="module-header" onclick="toggleModule(this)">
+      <div class="module-num" style="background:rgba(245,158,11,.15);color:#fbbf24">08</div>
+      <div class="module-info">
+        <h3>Бізнес подолога — запуск і масштаб</h3>
+        <p>Як продати першу подологічну процедуру наявним клієнтам і вийти на +30% до доходу</p>
+      </div>
+      <div class="module-meta">
+        <span class="pill video">📹 Відео</span>
+        <span class="pill live">🔴 Живе</span>
+        <span class="pill test">✅ Фінал</span>
+      </div>
+      <div class="toggle">▼</div>
+    </div>
+    <div class="module-body">
+      <div class="divider"></div>
+      <div class="lessons-grid">
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Як презентувати нові послуги наявним клієнтам</div>
+            <div class="lesson-desc">Скрипти, повідомлення в месенджерах, пост для соцмереж, спеціальна пропозиція для перших</div>
+            <div class="lesson-tags"><span class="lesson-tag">маркетинг</span><span class="lesson-tag">скрипти</span></div>
+          </div>
+          <div class="lesson-dur">25 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">📹</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Контент і соцмережі для подолога</div>
+            <div class="lesson-desc">Які пости збирають клієнтів, фото до/після, освітній контент, сторіз — готові ідеї на 30 днів</div>
+            <div class="lesson-tags"><span class="lesson-tag">контент</span><span class="lesson-tag">Instagram</span></div>
+          </div>
+          <div class="lesson-dur">30 хв</div>
+        </div>
+        <div class="lesson">
+          <div class="lesson-icon">✅</div>
+          <div class="lesson-content">
+            <div class="lesson-title">Фінальний іспит + видача сертифікату</div>
+            <div class="lesson-desc">Теоретичний тест + практичне завдання (відео своєї процедури) → отримання сертифікату</div>
+            <div class="lesson-tags"><span class="lesson-tag">сертифікат</span><span class="lesson-tag">підсумок</span></div>
+          </div>
+          <div class="lesson-dur">—</div>
+        </div>
+      </div>
+      <div class="hw-box">
+        <div class="hw-label">🏠 Фінальне завдання</div>
+        <ul>
+          <li>Провести 3 безкоштовні або пільгові процедури і записати відео</li>
+          <li>Зробити пост в соцмережах про старт нової послуги</li>
+          <li>Скласти план продажів на перший місяць після курсу</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- РОЗКЛАД -->
+<div class="section" id="section-schedule">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+    <table class="plan-table">
+      <thead>
+        <tr>
+          <th>Тиждень</th>
+          <th>Тема</th>
+          <th>Формат</th>
+          <th>Результат</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="week-num">1</span></td><td>Анатомія стопи — теорія і атлас</td><td><span class="format-badge" style="background:rgba(124,92,191,.12);color:#c084fc">📹 Відео</span></td><td>Знаєш будову стопи</td></tr>
+        <tr><td><span class="week-num">2</span></td><td>Патології нігтів + розбір кейсів</td><td><span class="format-badge" style="background:rgba(245,158,11,.12);color:#f59e0b">🔴 Живе</span></td><td>Вмієш діагностувати</td></tr>
+        <tr><td><span class="week-num">3</span></td><td>Гіперкератоз — класифікація і техніка</td><td><span class="format-badge" style="background:rgba(124,92,191,.12);color:#c084fc">📹 Відео</span></td><td>Знаєш типи мозолів</td></tr>
+        <tr><td><span class="week-num">4</span></td><td>Тест: діагностика по фото</td><td><span class="format-badge" style="background:rgba(34,197,94,.12);color:#22c55e">✅ Тест</span></td><td>Підтверджені знання</td></tr>
+        <tr><td><span class="week-num">5</span></td><td>Особливі групи: діабет, варикоз</td><td><span class="format-badge" style="background:rgba(124,92,191,.12);color:#c084fc">📹 Відео</span></td><td>Знаєш протипоказання</td></tr>
+        <tr><td><span class="week-num">6</span></td><td>Карта клієнта — практика заповнення</td><td><span class="format-badge" style="background:rgba(245,158,11,.12);color:#f59e0b">🔴 Живе</span></td><td>Готова документація</td></tr>
+        <tr><td><span class="week-num">7</span></td><td>Дезінфекція і санепідемрежим</td><td><span class="format-badge" style="background:rgba(124,92,191,.12);color:#c084fc">📹 Відео</span></td><td>Безпечний кабінет</td></tr>
+        <tr><td><span class="week-num">8</span></td><td>Засоби і кератолітики</td><td><span class="format-badge" style="background:rgba(124,92,191,.12);color:#c084fc">📹 Відео</span></td><td>Вмієш підбирати</td></tr>
+        <tr><td><span class="week-num">9</span></td><td>Прайс і пакети послуг</td><td><span class="format-badge" style="background:rgba(245,158,11,.12);color:#f59e0b">🔴 Живе</span></td><td>Готовий прайс</td></tr>
+        <tr><td><span class="week-num">10</span></td><td>Алгоритм прийому + демо процедура</td><td><span class="format-badge" style="background:rgba(124,92,191,.12);color:#c084fc">📹 Відео</span></td><td>Знаєш алгоритм</td></tr>
+        <tr><td><span class="week-num">11</span></td><td>Перший самостійний прийом</td><td><span class="format-badge" style="background:rgba(245,158,11,.12);color:#f59e0b">🔴 Живе</span></td><td>Перша процедура</td></tr>
+        <tr><td><span class="week-num">12</span></td><td>Бізнес, контент, фінальний іспит</td><td><span class="format-badge" style="background:rgba(245,158,11,.12);color:#f59e0b">🔴 Живе</span></td><td>🎓 Сертифікат</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ПРОМПТИ -->
+<div class="section" id="section-prompts">
+
+  <div class="prompt-card">
+    <h3>🤖 Асистент-куратор курсу</h3>
+    <div class="desc">Вставляй цей промпт в Claude Projects — він буде відповідати на питання учнів по матеріалу курсу замість тебе</div>
+    <div class="prompt-box" id="p1">Ти — куратор курсу "Основи Подології для Майстрів Манікюру". Твоя задача — допомагати учасникам курсу засвоїти матеріал.
+
+ТВІЙ СТИЛЬ:
+— Відповідай просто і зрозуміло, без зайвих медичних термінів
+— Якщо учень питає про щось небезпечне (діабетична стопа, відкриті рани) — завжди нагадуй про необхідність консультації лікаря
+— Заохочуй практику і домашні завдання
+
+ПРОГРАМА КУРСУ:
+Модуль 1: Анатомія стопи
+Модуль 2: Патології нігтів (оніхомікоз, врослий ніготь, деформації)
+Модуль 3: Гіперкератоз і мозолі
+Модуль 4: Особливі групи (діабет, варикоз, вагітні)
+Модуль 5: Дезінфекція і стерилізація
+Модуль 6: Засоби і кератолітики
+Модуль 7: Практичний прийом
+Модуль 8: Бізнес подолога
+
+ЗАБОРОНЕНО: давати медичні поради щодо лікування, ставити діагнози, замінювати консультацію лікаря.</div>
+    <button class="copy-btn" onclick="copyP('p1',this)">📋 Скопіювати</button>
+  </div>
+
+  <div class="prompt-card">
+    <h3>📸 Генератор контенту для учнів</h3>
+    <div class="desc">Учні можуть використовувати цей промпт щоб робити пости про свої нові послуги</div>
+    <div class="prompt-box" id="p2">Ти — копірайтер для майстрів подологічного педикюру.
+
+Напиши пост для Instagram на тему: [ТЕМА]
+
+Аудиторія: жінки 30-55 років, які мають проблеми зі стопами (мозолі, врослі нігті, грибок)
+Тон: теплий, експертний, без залякування
+Структура: гачок (перше речення) → проблема → рішення → CTA
+
+Довжина: 150-200 слів
+Додай 5-7 хештегів наприкінці
+Мова: українська</div>
+    <button class="copy-btn" onclick="copyP('p2',this)">📋 Скопіювати</button>
+  </div>
+
+  <div class="prompt-card">
+    <h3>📋 Генератор карти клієнта</h3>
+    <div class="desc">Допомагає учням скласти анкету для нового подологічного клієнта</div>
+    <div class="prompt-box" id="p3">Склади подологічну карту клієнта для майстра педикюру.
+
+Включи розділи:
+1. Особисті дані (ім'я, вік, контакт)
+2. Анамнез (хронічні хвороби, медикаменти, алергії)
+3. Скарги (що турбує, як давно)
+4. Огляд стопи (стан нігтів, шкіри, деформації)
+5. Діагноз майстра
+6. Протокол процедури
+7. Домашні рекомендації
+8. Дата наступного прийому
+
+Формат: таблиця з полями для заповнення
+Додай окремий блок: протипоказання і підпис клієнта (інформована згода)</div>
+    <button class="copy-btn" onclick="copyP('p3',this)">📋 Скопіювати</button>
+  </div>
+
+</div>
+
+<!-- ПРОДАЖ -->
+<div class="section" id="section-sales">
+
+  <div class="prompt-card">
+    <h3>💰 Оффер курсу</h3>
+    <div class="desc">Готовий текст для продажу курсу наявним клієнтам і в соцмережах</div>
+    <div class="prompt-box" id="p4">Ти вже вмієш робити ідеальний педикюр.
+Але твої клієнтки приходять з мозолями, врослими нігтями і грибком — і ти не знаєш що з цим робити?
+
+Курс "Основи Подології" для майстрів манікюру і педикюру — це:
+
+✓ 8 модулів по реальних проблемах стоп
+✓ 42 відео-уроки які можна дивитись у будь-який час
+✓ 6 живих занять з розбором твоїх кейсів
+✓ Готові карти клієнтів, чек-листи і протоколи
+✓ Сертифікат після іспиту
+
+Після курсу ти зможеш:
+→ Брати клієнтів з мозолями і врослими нігтями
+→ Додати +3-5 процедур в тиждень до свого розкладу
+→ Підняти середній чек на 30-50%
+
+3 місяці. Змішаний формат. Група до 15 людей.
+
+👇 Напиши мені щоб дізнатись деталі</div>
+    <button class="copy-btn" onclick="copyP('p4',this)">📋 Скопіювати</button>
+  </div>
+
+  <div class="prompt-card">
+    <h3>📱 Повідомлення наявним клієнтам</h3>
+    <div class="desc">Розсилка для твоїх клієнток які вже ходять на педикюр</div>
+    <div class="prompt-box" id="p5">Привіт! Я запускаю навчання для майстрів педикюру і манікюру — курс "Основи Подології".
+
+Якщо ти знаєш майстра який хоче розширити свої послуги і почати працювати з мозолями, врослими нігтями і проблемними стопами — поділись з нею цим повідомленням 🙏
+
+Або якщо ти сама займаєшся педикюром — напиши мені, розповім деталі.
+
+[ім'я майстра]</div>
+    <button class="copy-btn" onclick="copyP('p5',this)">📋 Скопіювати</button>
+  </div>
+
+</div>
+
+</main>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+function toggleModule(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.toggle');
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+function copyP(id, btn) {
+  navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
+    btn.textContent = '✅ Скопійовано!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 Скопіювати'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+</script>
+</body>
+</html>
